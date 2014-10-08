@@ -5,7 +5,9 @@ potatoNews.config([
 '$urlRouterProvider',
 function($stateProvider, $urlRouterProvider) {
 //resolve ensures that any time home is entered, we always load all of the posts
-//before the state finishes loading.
+//before the state finishes loading.  a blocking preload?
+//more info at
+//https://github.com/angular-ui/ui-router/wiki
   $stateProvider
     .state('home', {
       url: '/home',
@@ -22,7 +24,12 @@ function($stateProvider, $urlRouterProvider) {
     .state('posts', {
         url: '/posts/{id}',
         templateUrl: '/posts.html',
-        controller: 'PostsCtrl'
+        controller: 'PostsCtrl',
+        resolve: {
+            post: ['$stateParams', 'posts', function ($stateParams, posts) {
+                return posts.get($stateParams.id);
+            }]
+        }
     });
   $urlRouterProvider.otherwise('home');
 }])
@@ -42,10 +49,37 @@ potatoNews.factory('posts', ['$http', function ($http){
         });
     };
     //now we'll need to create new posts
+    //uses the router.post in index.js to post a new Post mongoose model to mongodb
+    //when $http gets a success back, it adds this post to the posts object in
+    //this local factory, so the mongodb and angular data is the same
+    //sweet!
     o.create = function(post) {
         return $http.post('/posts', post).success(function (data) {
             o.posts.push(data);
         });
+    };
+    //upvotes
+    o.upvote = function (post) {
+        //use the express route for this post's id to add an upvote to it in the mongo model
+        return $http.put('/posts/' + post._id + '/upvote')
+            .success(function (data) {
+                //if we know it worked on the backend, update frontend
+                post.upvotes += 1;
+        });
+    };
+    //grab a single post from the server
+    o.get = function (id) {
+        //use the express route to grab this post and return the response
+        //from that route, which is a json of the post data
+        //.then is a promise, a kind of newly native thing in JS that upon cursory research
+        //looks friggin sweet; TODO Learn to use them like a boss.  First, this.
+        return $http.get('/posts/' + id).then(function (res) {
+            return res.data;
+        });
+    };
+    //comments, once again using express
+    o.addComment = function (id, comment) {
+        return $http.post('/posts/' + id + '/comments', comment);
     };
     
     return o;
@@ -81,16 +115,40 @@ function($scope, posts){
     };
     
     $scope.incrementUpvotes = function(post) {
-        post.upvotes += 1;
+        //our post factory has an upvote() function in it
+        //we're just calling this using the post we have
+        post.upvote(post);
     }
 
 }])
 
 potatoNews.controller('PostsCtrl', [
 '$scope',
-'$stateParams',
 'posts',
-function ($scope, $stateParams, posts){
-    console.log(posts.posts);
-    $scope.post = posts.posts[$stateParams.id];
+'post',
+function ($scope, $stateParams, posts, post){
+    //used to need $stateRouterProvider to figure out what
+    //specific post we're grabbing.  Since we used the resolve object to
+    //refer to the posts.get() function and assigned it to the post value
+    //then injected that here, we now have the specific post from the db
+    //we also inject 'posts' so we can screw with the comments
+    $scope.post = post;
+    
+    $scope.addComment = function () {
+        if ($scope.body === '') { return; }
+        posts.addComment(post._id, {
+            //add the comment to this post object in mongo
+            body: $scope.body,
+            author: 'user',
+        }).success(function(comment) {
+            //on success, update the client with the new comment
+            $scope.post.comments.push(comment);
+        });
+        $scope.body = '';
+    };
+    
+    $scope.incrementUpvotes = function (comment) {
+        posts.upvoteComment (post, comment);
+    };
+    
 }]);
