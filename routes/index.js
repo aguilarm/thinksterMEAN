@@ -42,4 +42,70 @@ router.post('/posts', function (req, res, next) {
     });
 });
 
+//param auto loads an object rather than reloading it every time
+//for this, I need to grab the post ID
+//this allows route URLs with :post in them to use this function to
+//determine the post to use
+//high five
+router.param('post', function (req, res, next, id) {
+    var query = Post.findById(id);
+    
+    query.exec(function (err, post) {
+        //first throw an error if found through http
+        if (err) { return next(err); }
+        //again throw and error if the post does not exist for this id
+        if (!post) { return next(new Error("Cannot find post!")); }
+        //if no errors, toss post to the request object to use later
+        req.post = post;
+        //http://stackoverflow.com/questions/8710669/having-a-hard-time-trying-to-understand-next-next-in-express-js
+        //next calls the next middleware in the que
+        //in this case, it is the route handler
+        //at least if used in router.post('/posts:post')
+        //here this param is called first, THEN the router finishes after retrieving the post
+        return next();
+    });
+});
+
+//for handling a single post, as explained above,
+//we use the 'post' param to figure out what post we're using
+//the param handles errors, so this doesn't need to since it wont complete without it
+router.get('/posts/:post', function (req, res) {
+    //using the populate() method, all of the comments associated with this post
+    //are loaded
+    req.post.populate('comments', function (err, post) {
+    //the post object will be retrieved and added to the req object by
+    //the param middleware, so we just have to send the
+    //json back to the client
+    //I'm FAIRLY sure that angular will grab that JSON and render a page,
+    //but I have no idea right now exactly what happens yet.
+        res.json(req.post);
+    });
+});
+
+//route for upvotes
+router.put('/posts/:post/upvote', function (req, res, next) {
+    req.post.upvote(function (err, post) {
+        if (err) { return next(err); }
+        res.json(post);
+    });
+});
+
+//comments routing, per post
+router.post('/posts/:post/comments', function (req, res, next) {
+    //pass the request body into a new Comment mongoose model
+    var comment = new Comment(req.body);
+    //check for errors, and save the comment if none
+    comment.save(function (err, comment) {
+        if (err) { return next(err); }
+        //no http errors, add this comment to the comments array
+        req.post.comments.push(comment);
+        
+        req.post.save(function (err, post) {
+            if (err) { return next(err); }
+            
+            res.json(comment);
+        });
+    });
+});
+
 module.exports = router;
