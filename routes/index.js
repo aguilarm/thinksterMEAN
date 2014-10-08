@@ -8,7 +8,7 @@ var Commment = mongoose.model('Comment');
 
 /* GET home page. */
 router.get('/', function (req, res) {
-  res.render('index', { title: 'Express' });
+  res.render('index');
 });
 
 //req=request object from the client
