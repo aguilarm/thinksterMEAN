@@ -65,7 +65,8 @@ potatoNews.factory('posts', ['$http', function ($http){
             .success(function (data) {
                 //if we know it worked on the backend, update frontend
                 post.upvotes += 1;
-        });
+                console.log('upvote success');
+            });
     };
     //grab a single post from the server
     o.get = function (id) {
@@ -81,7 +82,13 @@ potatoNews.factory('posts', ['$http', function ($http){
     o.addComment = function (id, comment) {
         return $http.post('/posts/' + id + '/comments', comment);
     };
-    
+    //upvotes
+    o.upvoteComment = function (post, comment) {
+        return $http.put('posts/' + post._id + '/comments/' + comment._id + '/upvote')
+            .success(function (data) {
+                comment.upvotes += 1;
+            });
+    };
     return o;
 }])
 
@@ -109,15 +116,12 @@ function($scope, posts){
         //clear the values
         $scope.title = '';
         $scope.link = '';
-        
-        console.log(posts.posts);
-        console.log($scope.posts);
     };
     
     $scope.incrementUpvotes = function(post) {
         //our post factory has an upvote() function in it
         //we're just calling this using the post we have
-        post.upvote(post);
+        posts.upvote(post);
     }
 
 }])
