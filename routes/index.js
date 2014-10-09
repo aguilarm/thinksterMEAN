@@ -67,6 +67,7 @@ router.param('post', function (req, res, next, id) {
 
 //for comment upvotes, I also need a comment param
 router.param('comment', function (req, res, next, id) {
+    console.log('comment param');
     var query = Comment.findById(id);
     query.exec(function (err, comment) {
         if (err) {return next(err); }
@@ -126,10 +127,10 @@ router.get('/posts/:post/comments', function (req, res) {
 
 //comment upvotes
 router.put('/posts/:post/comments/:comment/upvote', function (req, res, next) {
-    console.log('potato');
-    req.post.comment.upvotes(function (err, post) {
+    console.log(req.comment.upvotes);
+    req.comment.upvote(function (err, comment) {
         if (err) { return next(err); }
-        res.json(post);
+        res.json(comment);
     });
 });
 
