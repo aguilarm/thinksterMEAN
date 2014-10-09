@@ -101,6 +101,16 @@ router.put('/posts/:post/upvote', function (req, res, next) {
     });
 });
 
+//route for post downvotes
+router.put('/posts/:post/downvote', function (req, res, next) {
+    console.log('downvote');
+    req.post.downvote(function (err, post) {
+        if (err) { return next(err); }
+        res.json(post);
+    });
+});
+
+
 //comments routing, per post
 router.post('/posts/:post/comments', function (req, res, next) {
     //pass the request body into a new Comment mongoose model
@@ -127,8 +137,15 @@ router.get('/posts/:post/comments', function (req, res) {
 
 //comment upvotes
 router.put('/posts/:post/comments/:comment/upvote', function (req, res, next) {
-    console.log(req.comment.upvotes);
     req.comment.upvote(function (err, comment) {
+        if (err) { return next(err); }
+        res.json(comment);
+    });
+});
+
+//comment downvotes
+router.put('/posts/:post/comments/:comment/downvote', function (req, res, next) {
+    req.comment.downvote(function (err, comment) {
         if (err) { return next(err); }
         res.json(comment);
     });

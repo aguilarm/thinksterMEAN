@@ -62,7 +62,14 @@ potatoNews.factory('posts', ['$http', function ($http){
         return $http.put('/posts/' + post._id + '/upvote')
             .success(function (data) {
                 //if we know it worked on the backend, update frontend
-                post.upvotes += 1;
+                post.votes += 1;
+            });
+    };
+    //downvotes
+    o.downvote = function (post) {
+        return $http.put('/posts/' + post._id + '/downvote')
+            .success(function (data) {
+                post.votes -= 1;
             });
     };
     //grab a single post from the server
@@ -83,7 +90,15 @@ potatoNews.factory('posts', ['$http', function ($http){
     o.upvoteComment = function (post, comment) {
         return $http.put('posts/' + post._id + '/comments/' + comment._id + '/upvote')
             .success(function (data) {
-                comment.upvotes += 1;
+                comment.votes += 1;
+            });
+    };
+    //downvote comments
+    //I should really consolidate these into one voteHandler function
+    o.downvoteComment = function (post, comment) {
+        return $http.put('posts/' + post._id + '/comments/' + comment._id + '/downvote')
+            .success(function (data) {
+                comment.votes -= 1;
             });
     };
     return o;
@@ -110,11 +125,14 @@ function($scope, posts){
         $scope.link = '';
     };
     
-    $scope.incrementUpvotes = function(post) {
+    $scope.upvote = function(post) {
         //our post factory has an upvote() function in it
         //we're just calling this using the post we have
         posts.upvote(post);
     }
+    $scope.downvote = function (post) {
+        posts.downvote(post);
+    };
 
 }])
 
@@ -141,8 +159,12 @@ function ($scope, posts, post){
         $scope.body = '';
     };
     
-    $scope.incrementUpvotes = function (comment) {
+    $scope.upvote = function (comment) {
         posts.upvoteComment (post, comment);
+    };
+    
+    $scope.downvote = function (comment) {
+        posts.downvoteComment (post, comment);
     };
     
 }]);
