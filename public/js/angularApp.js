@@ -130,9 +130,6 @@ function ($scope, posts, post){
     //we also inject 'posts' so we can screw with the comments
     $scope.post = post;
     
-    console.log(post);
-    console.log(posts);
-    
     $scope.addComment = function () {
         if ($scope.body === '') { return; }
         posts.addComment(post._id, {

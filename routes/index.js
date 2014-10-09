@@ -49,7 +49,6 @@ router.post('/posts', function (req, res, next) {
 //high five
 router.param('post', function (req, res, next, id) {
     var query = Post.findById(id);
-    console.log('post param start');
     query.exec(function (err, post) {
         //first throw an error if found through http
         if (err) { return next(err); }
@@ -66,13 +65,23 @@ router.param('post', function (req, res, next, id) {
     });
 });
 
+//for comment upvotes, I also need a comment param
+router.param('comment', function (req, res, next, id) {
+    var query = Comment.findById(id);
+    query.exec(function (err, comment) {
+        if (err) {return next(err); }
+        if (!comment) { return next(new Error("Cannot find comment!")); }
+        req.comment = comment;
+        return next();
+    });
+});
+
 //for handling a single post, as explained above,
 //we use the 'post' param to figure out what post we're using
 //the param handles errors, so this doesn't need to since it wont complete without it
 router.get('/posts/:post', function (req, res) {
     //using the populate() method, all of the comments associated with this post
     //are loaded
-    console.log('get /posts/:post');
     req.post.populate('comments', function (err, post) {
     //the post object will be retrieved and added to the req object by
     //the param middleware, so we just have to send the
@@ -83,7 +92,7 @@ router.get('/posts/:post', function (req, res) {
     });
 });
 
-//route for upvotes
+//route for post upvotes
 router.put('/posts/:post/upvote', function (req, res, next) {
     req.post.upvote(function (err, post) {
         if (err) { return next(err); }
@@ -95,25 +104,33 @@ router.put('/posts/:post/upvote', function (req, res, next) {
 router.post('/posts/:post/comments', function (req, res, next) {
     //pass the request body into a new Comment mongoose model
     console.log('potato');
-    var comm = new Comment(req.body);
+    var comment = new Comment(req.body);
     console.log('pajama');
     //check for errors, and save the comment if none
-    comm.save(function (err, comm) {
-        console.log('comment.save');
-        if (err) { return next(err); console.log('error on save'); }
+    comment.save(function (err, comment) {
+        if (err) { return next(err); }
         //no http errors, add this comment to the comments array
-        req.post.comments.push(comm);
+        req.post.comments.push(comment);
         
         req.post.save(function (err, post) {
-            if (err) { return next(err); console.log('error on post save'); }
+            if (err) { return next(err); }
             
-            res.json(comm);
+            res.json(comment);
         });
     });
 });
 
 router.get('/posts/:post/comments', function (req, res) {
     res.json(req.post.comments);
+});
+
+//comment upvotes
+router.put('/posts/:post/comments/:comment/upvote', function (req, res, next) {
+    console.log('potato');
+    req.post.comment.upvotes(function (err, post) {
+        if (err) { return next(err); }
+        res.json(post);
+    });
 });
 
 module.exports = router;
