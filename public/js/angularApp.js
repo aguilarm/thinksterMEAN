@@ -15,8 +15,6 @@ function($stateProvider, $urlRouterProvider) {
       controller: 'MainCtrl',
       resolve: {
           postPromise: ['posts', function (posts) {
-              console.log('postPromise');
-              console.log(posts.getAll());
               return posts.getAll();
           }]
       }
@@ -65,7 +63,6 @@ potatoNews.factory('posts', ['$http', function ($http){
             .success(function (data) {
                 //if we know it worked on the backend, update frontend
                 post.upvotes += 1;
-                console.log('upvote success');
             });
     };
     //grab a single post from the server
@@ -99,13 +96,8 @@ potatoNews.controller('MainCtrl', [
 function($scope, posts){
     
     $scope.posts = posts.posts;
-    console.log(posts.posts);
-    console.log($scope.posts);
     //setting title to blank here to prevent empty posts
     $scope.title = '';
-    
-    console.log(posts.posts);
-    console.log($scope.posts);
     
     $scope.addPost = function(){
         if($scope.title === '') {return;}
@@ -130,7 +122,7 @@ potatoNews.controller('PostsCtrl', [
 '$scope',
 'posts',
 'post',
-function ($scope, $stateParams, posts, post){
+function ($scope, posts, post){
     //used to need $stateRouterProvider to figure out what
     //specific post we're grabbing.  Since we used the resolve object to
     //refer to the posts.get() function and assigned it to the post value
@@ -138,14 +130,15 @@ function ($scope, $stateParams, posts, post){
     //we also inject 'posts' so we can screw with the comments
     $scope.post = post;
     
+    console.log(post);
+    console.log(posts);
+    
     $scope.addComment = function () {
         if ($scope.body === '') { return; }
         posts.addComment(post._id, {
-            //add the comment to this post object in mongo
             body: $scope.body,
             author: 'user',
-        }).success(function(comment) {
-            //on success, update the client with the new comment
+        }).success(function (comment) {
             $scope.post.comments.push(comment);
         });
         $scope.body = '';

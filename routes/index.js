@@ -4,7 +4,7 @@ var router = express.Router();
 
 //these models are found in the /models folder
 var Post = mongoose.model('Post');
-var Commment = mongoose.model('Comment');
+var Comment = mongoose.model('Comment');
 
 /* GET home page. */
 router.get('/', function (req, res) {
@@ -49,7 +49,7 @@ router.post('/posts', function (req, res, next) {
 //high five
 router.param('post', function (req, res, next, id) {
     var query = Post.findById(id);
-    
+    console.log('post param start');
     query.exec(function (err, post) {
         //first throw an error if found through http
         if (err) { return next(err); }
@@ -72,6 +72,7 @@ router.param('post', function (req, res, next, id) {
 router.get('/posts/:post', function (req, res) {
     //using the populate() method, all of the comments associated with this post
     //are loaded
+    console.log('get /posts/:post');
     req.post.populate('comments', function (err, post) {
     //the post object will be retrieved and added to the req object by
     //the param middleware, so we just have to send the
@@ -93,19 +94,26 @@ router.put('/posts/:post/upvote', function (req, res, next) {
 //comments routing, per post
 router.post('/posts/:post/comments', function (req, res, next) {
     //pass the request body into a new Comment mongoose model
-    var comment = new Comment(req.body);
+    console.log('potato');
+    var comm = new Comment(req.body);
+    console.log('pajama');
     //check for errors, and save the comment if none
-    comment.save(function (err, comment) {
-        if (err) { return next(err); }
+    comm.save(function (err, comm) {
+        console.log('comment.save');
+        if (err) { return next(err); console.log('error on save'); }
         //no http errors, add this comment to the comments array
-        req.post.comments.push(comment);
+        req.post.comments.push(comm);
         
         req.post.save(function (err, post) {
-            if (err) { return next(err); }
+            if (err) { return next(err); console.log('error on post save'); }
             
-            res.json(comment);
+            res.json(comm);
         });
     });
+});
+
+router.get('/posts/:post/comments', function (req, res) {
+    res.json(req.post.comments);
 });
 
 module.exports = router;
