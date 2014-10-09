@@ -87,8 +87,6 @@ router.get('/posts/:post', function (req, res) {
     //the post object will be retrieved and added to the req object by
     //the param middleware, so we just have to send the
     //json back to the client
-    //I'm FAIRLY sure that angular will grab that JSON and render a page,
-    //but I have no idea right now exactly what happens yet.
         res.json(req.post);
     });
 });

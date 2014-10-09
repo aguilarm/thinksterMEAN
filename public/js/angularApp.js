@@ -3,7 +3,8 @@ var potatoNews = angular.module('potatoNews', ['ui.router'])
 potatoNews.config([
 '$stateProvider',
 '$urlRouterProvider',
-function($stateProvider, $urlRouterProvider) {
+'$locationProvider',
+function($stateProvider, $urlRouterProvider, $locationProvider) {
 //resolve ensures that any time home is entered, we always load all of the posts
 //before the state finishes loading.  a blocking preload?
 //more info at
@@ -20,7 +21,7 @@ function($stateProvider, $urlRouterProvider) {
       }
     })
     .state('posts', {
-        url: '/posts/{id}',
+        url: '/posts/:id',
         templateUrl: '/posts.html',
         controller: 'PostsCtrl',
         resolve: {
@@ -29,8 +30,12 @@ function($stateProvider, $urlRouterProvider) {
             }]
         }
     });
+  
   $urlRouterProvider.otherwise('home');
-}])
+  
+  //$locationProvider.html5Mode(true);
+  
+}]);
 
 potatoNews.factory('posts', ['$http', function ($http){
     var o = {
@@ -88,7 +93,7 @@ potatoNews.factory('posts', ['$http', function ($http){
     };
     //upvote comments
     o.upvoteComment = function (post, comment) {
-        return $http.put('posts/' + post._id + '/comments/' + comment._id + '/upvote')
+        return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/upvote')
             .success(function (data) {
                 comment.votes += 1;
             });
@@ -96,13 +101,13 @@ potatoNews.factory('posts', ['$http', function ($http){
     //downvote comments
     //I should really consolidate these into one voteHandler function
     o.downvoteComment = function (post, comment) {
-        return $http.put('posts/' + post._id + '/comments/' + comment._id + '/downvote')
+        return $http.put('/posts/' + post._id + '/comments/' + comment._id + '/downvote')
             .success(function (data) {
                 comment.votes -= 1;
             });
     };
     return o;
-}])
+}]);
 
 
 potatoNews.controller('MainCtrl', [
@@ -134,7 +139,7 @@ function($scope, posts){
         posts.downvote(post);
     };
 
-}])
+}]);
 
 potatoNews.controller('PostsCtrl', [
 '$scope',

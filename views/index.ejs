@@ -43,6 +43,7 @@
             </span>
             <span>
                 <a href="#/posts/{{post._id}}">Comments</a>
+                ({{post.comments.length}})
             </span>
         </div>
     
@@ -64,7 +65,7 @@
                     ng-model="link">
             </div>
             
-            <button type="submit">Post</button>
+            <button type="submit" class="btn btn-primary">Post</button>
         </form>
     </script>
     <!-- end of /home template -->
