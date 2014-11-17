@@ -34,7 +34,7 @@
             <span class="glyphicon glyphicon-thumbs-down"
                 ng-click="downvote(post)"></span>
             <span style="font-size:20px;margin-left:10px">
-                <a ng-show="post.link" href="{{post.link}}">
+                <a ng-show="post.link" ng-href="{{post.link}}" target="_self">
                     {{post.title}}
                 </a>
                 <span ng-hide="post.link">
